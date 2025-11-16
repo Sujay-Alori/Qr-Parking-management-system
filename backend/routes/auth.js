@@ -118,6 +118,59 @@ router.post('/login', validate({ body: schemas.loginSchema }), async (req, res) 
   }
 });
 
+// Admin login endpoint - dedicated for admin authentication
+router.post('/admin/login', validate({ body: schemas.loginSchema }), async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Verify password
+    const isPasswordValid = await user.comparePassword(password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Strictly check if user is admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied. Admin credentials required.',
+        code: 'NOT_ADMIN'
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id.toString(), email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Log admin login for security tracking
+    console.log(`Admin login successful: ${user.email} at ${new Date().toISOString()}`);
+
+    res.json({
+      message: 'Admin login successful',
+      token,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Verify token
 router.get('/verify', async (req, res) => {
   try {

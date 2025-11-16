@@ -27,16 +27,13 @@ const AdminAuth = () => {
 
     setIsLoading(true);
     try {
-      const response = await authAPI.login(loginData.email, loginData.password);
-      if (response.data.user.role !== 'admin') {
-        toast.error('Access denied. Admin credentials required.');
-        setIsLoading(false);
-        return;
-      }
+      // Use dedicated admin login endpoint
+      const response = await authAPI.adminLogin(loginData.email, loginData.password);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Admin login successful!');
-      navigate('/admin/dashboard');
+      // Navigate to admin dashboard - the route will handle redirect to /admin/dashboard
+      navigate('/admin');
     } catch (err) {
       if (err.response?.data?.details && Array.isArray(err.response.data.details)) {
         const validationErrors = err.response.data.details

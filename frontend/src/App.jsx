@@ -6,6 +6,10 @@ import UserAuth from "./pages/UserAuth";
 import AdminAuth from "./pages/AdminAuth";
 import UserDashboardPage from "./pages/UserDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminSlots from "./pages/admin/AdminSlots";
+import AdminScanner from "./pages/admin/AdminScanner";
+import AdminStatsPage from "./pages/admin/AdminStats";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -52,13 +56,19 @@ function App() {
           }
         />
         <Route
-          path="/admin/dashboard"
+          path="/admin/*"
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminDashboardPage />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminOverview />} />
+          <Route path="slots" element={<AdminSlots />} />
+          <Route path="scanner" element={<AdminScanner />} />
+          <Route path="stats" element={<AdminStatsPage />} />
+        </Route>
 
         {/* Catch all - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />

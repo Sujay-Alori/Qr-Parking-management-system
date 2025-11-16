@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminDashboard from '../components/AdminDashboard';
-import Navbar from '../components/Navbar';
-import LoadingOverlay from '../components/LoadingOverlay';
+import AdminLayout from '../components/AdminLayout';
 
 const AdminDashboardPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // ProtectedRoute already validates the user, so we can safely get from localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const userData = JSON.parse(storedUser);
+        // Double-check it's an admin (should already be validated by ProtectedRoute)
+        if (userData.role === 'admin') {
+          setUser(userData);
+        } else {
+          // This shouldn't happen, but handle it just in case
+          navigate('/admin/login');
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        navigate('/admin/login');
+      }
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -22,18 +32,14 @@ const AdminDashboardPage = () => {
     navigate('/');
   };
 
+  // Don't render until we have user data
   if (!user) {
-    return <LoadingOverlay />;
+    return null;
   }
 
-  return (
-    <>
-      <Navbar user={user} onLogout={handleLogout} />
-      {isLoading && <LoadingOverlay />}
-      <AdminDashboard setIsLoading={setIsLoading} />
-    </>
-  );
+  return <AdminLayout user={user} onLogout={handleLogout} />;
 };
 
 export default AdminDashboardPage;
+
 
