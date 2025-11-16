@@ -3,13 +3,10 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-const connectDB = require('./config/database');
+const { connectDB, checkConnection } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const parkingRoutes = require('./routes/parking');
 const adminRoutes = require('./routes/admin');
-
-// Connect to MongoDB
-connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,7 +32,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Start server function
+const startServer = async () => {
+  try {
+    // Connect to MongoDB first
+    await connectDB();
+    
+    // Check connection and print status
+    checkConnection(PORT);
+    
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`📡 API endpoints available at http://localhost:${PORT}/api\n`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+};
+
+// Start the application
+startServer();
 
