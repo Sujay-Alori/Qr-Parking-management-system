@@ -30,14 +30,15 @@ const UserDashboard = ({ setIsLoading }) => {
     }
   };
 
-  const handleBookSlot = async (slotId, vehicleNumber) => {
+  const handleReserveSlot = async (slotId, vehicleNumber, arrivalTime) => {
     try {
       setIsLoading(true);
-      await parkingAPI.bookSlot(slotId, vehicleNumber);
+      const response = await parkingAPI.reserveSlot(slotId, vehicleNumber, arrivalTime);
       await loadData();
-      toast.success(`Slot ${slotId} booked successfully for vehicle ${vehicleNumber}`);
+      toast.success(`Slot ${slotId} reserved successfully!`);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to book slot');
+      const errorMsg = error.response?.data?.error || error.response?.data?.details?.[0]?.message || 'Failed to reserve slot';
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -71,10 +72,10 @@ const UserDashboard = ({ setIsLoading }) => {
   return (
     <div className="container mx-auto px-4 py-8">
       {currentBooking && (
-        <CurrentBooking booking={currentBooking} onCancel={handleCancelBooking} />
+        <CurrentBooking booking={currentBooking} onCancel={handleCancelBooking} onRefresh={loadData} />
       )}
       <h2 className="text-2xl font-bold mb-6">Available Parking Slots</h2>
-      <ParkingSlots slots={slots} onBook={handleBookSlot} />
+      <ParkingSlots slots={slots} onReserve={handleReserveSlot} />
     </div>
   );
 };

@@ -49,15 +49,22 @@ export const authAPI = {
 export const parkingAPI = {
   getSlots: () => api.get('/parking/slots'),
   getBooking: () => api.get('/parking/booking'),
-  bookSlot: (slotId, vehicleNumber) => api.post('/parking/book', { slotId, vehicleNumber }),
+  reserveSlot: (slotId, vehicleNumber, arrivalTime) => api.post('/parking/reserve', { slotId, vehicleNumber, arrivalTime }),
+  requestOccupied: () => api.post('/parking/request-occupied'),
+  requestLeaving: () => api.post('/parking/request-leaving'),
+  processPayment: () => api.post('/parking/payment'),
   cancelBooking: () => api.post('/parking/cancel')
 };
 
 // Admin API
 export const adminAPI = {
+  // Stats
   getStats: () => api.get('/admin/stats'),
+  
+  // Parking Slots
   getSlots: () => api.get('/admin/slots'),
-  releaseSlot: (slotId) => api.post('/admin/release', { slotId }),
+  updateSlotStatus: (slotId, status) => api.patch(`/admin/slots/${slotId}/status`, { status }),
+  releaseSlot: (slotId) => api.post(`/admin/slots/${slotId}/release`),
   getQRCode: (slotId) => api.get(`/admin/qr/${slotId}`),
   scanQR: (imageFile) => {
     const formData = new FormData();
@@ -67,7 +74,20 @@ export const adminAPI = {
         'Content-Type': 'multipart/form-data'
       }
     });
-  }
+  },
+  
+  // Users
+  getUsers: (params = {}) => api.get('/admin/users', { params }),
+  getUser: (userId) => api.get(`/admin/users/${userId}`),
+  blockUser: (userId) => api.post(`/admin/users/${userId}/block`),
+  unblockUser: (userId) => api.post(`/admin/users/${userId}/unblock`),
+  
+  // Requests
+  getRequests: (type) => api.get('/admin/requests', { params: type ? { type } : {} }),
+  approveOccupied: (slotId) => api.post(`/admin/approve-occupied/${slotId}`),
+  rejectOccupied: (slotId) => api.post(`/admin/reject-occupied/${slotId}`),
+  approveLeaving: (slotId) => api.post(`/admin/approve-leaving/${slotId}`),
+  getCompletedParkings: (params = {}) => api.get('/admin/completed-parkings', { params })
 };
 
 export default api;

@@ -1,45 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminLayout from '../components/AdminLayout';
+import AdminDashboard from '../components/AdminDashboard';
+import { Button } from '../components/ui/button';
+import { LogOut } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const AdminDashboardPage = () => {
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // ProtectedRoute already validates the user, so we can safely get from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        // Double-check it's an admin (should already be validated by ProtectedRoute)
-        if (userData.role === 'admin') {
-          setUser(userData);
-        } else {
-          // This shouldn't happen, but handle it just in case
-          navigate('/admin/login');
-        }
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        navigate('/admin/login');
-      }
-    }
-  }, [navigate]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/');
+    toast.success('Logged out successfully');
+    navigate('/admin/login');
   };
 
-  // Don't render until we have user data
-  if (!user) {
-    return null;
-  }
-
-  return <AdminLayout user={user} onLogout={handleLogout} />;
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </div>
+      <AdminDashboard setIsLoading={setIsLoading} />
+    </div>
+  );
 };
 
 export default AdminDashboardPage;
-
-

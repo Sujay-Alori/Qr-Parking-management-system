@@ -96,6 +96,14 @@ router.post('/login', validate({ body: schemas.loginSchema }), async (req, res) 
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ 
+        error: 'Your account has been blocked. Please contact administrator.',
+        code: 'USER_BLOCKED'
+      });
+    }
+
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, role: user.role },
       JWT_SECRET,
@@ -135,6 +143,14 @@ router.post('/admin/login', validate({ body: schemas.loginSchema }), async (req,
 
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ 
+        error: 'Your account has been blocked. Please contact administrator.',
+        code: 'USER_BLOCKED'
+      });
     }
 
     // Strictly check if user is admin

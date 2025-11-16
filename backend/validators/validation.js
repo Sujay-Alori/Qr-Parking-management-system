@@ -92,6 +92,48 @@ const slotIdParamSchema = z.object({
     .refine((val) => val.length === 4, 'Slot ID must be 4 characters (e.g., A-01)')
 });
 
+const updateSlotStatusSchema = z.object({
+  status: z
+    .enum(['available', 'occupied', 'maintenance'], {
+      errorMap: () => ({ message: 'Status must be: available, occupied, or maintenance' })
+    })
+});
+
+const userIdParamSchema = z.object({
+  userId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format')
+});
+
+const reserveSlotSchema = z.object({
+  slotId: z
+    .string({ required_error: 'Slot ID is required' })
+    .trim()
+    .regex(slotIdRegex, 'Invalid slot ID format. Must be like A-01, B-02, etc.')
+    .refine((val) => val.length === 4, 'Slot ID must be 4 characters (e.g., A-01)'),
+  vehicleNumber: z
+    .string({ required_error: 'Vehicle number is required' })
+    .trim()
+    .min(2, 'Vehicle number must be at least 2 characters')
+    .max(10, 'Vehicle number must not exceed 10 characters')
+    .regex(vehicleNumberRegex, 'Vehicle number can only contain alphanumeric characters')
+    .transform((val) => val.toUpperCase()),
+  arrivalTime: z
+    .string({ required_error: 'Arrival time is required' })
+    .refine((val) => {
+      try {
+        const date = new Date(val);
+        return !isNaN(date.getTime());
+      } catch {
+        return false;
+      }
+    }, 'Invalid datetime format')
+    .transform((val) => new Date(val))
+    .refine((val) => {
+      const now = new Date();
+      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+      return val >= oneHourFromNow;
+    }, 'Arrival time must be at least 1 hour from now')
+});
+
 // Validation middleware
 const validate = (schema) => {
   return (req, res, next) => {
@@ -140,7 +182,10 @@ module.exports = {
     loginSchema,
     bookSlotSchema,
     releaseSlotSchema,
-    slotIdParamSchema
+    slotIdParamSchema,
+    updateSlotStatusSchema,
+    userIdParamSchema,
+    reserveSlotSchema
   }
 };
 
